@@ -6,6 +6,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Role;
+use App\Models\Emploi;
+use App\Models\Proposal;
+use App\Models\Conversation;
 
 class User extends Authenticatable
 {
@@ -20,6 +24,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role_id',
     ];
 
     /**
@@ -44,4 +49,42 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the role that owns the user.
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function proposals()
+    {
+        return $this->hasMany(Proposal::class);
+    }
+
+    public function emplois()
+    {
+        return $this->hasMany(Emploi::class);
+    }
+
+    public function likes()
+    {
+        return $this->belongsToMany(Emploi::class)->withTimestamps()->orderByDesc('emploi_user.created_at');
+    }
+
+    public function conversations()
+    {
+        return Conversation::where(function ($q) {
+            $q->where('to', $this->id)
+                ->orWhere('from', $this->id);
+        });
+    }
+
+    public function getConversationsAttribute()
+    {
+        return $this->conversations()->get();
+    }
+
+
 }
